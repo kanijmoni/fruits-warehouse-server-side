@@ -2,7 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -13,15 +13,40 @@ app.use(express.json());
 // password:4Vq8Dz68YRa$p2Dv
 
 
-const uri = "mongodb+srv://dbuser1:4Vq8Dz68YRa$p2Dv@cluster0.3gzbo.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-client.connect(err => {
-    const collection = client.db("foodExpress").collection("users");
-    console.log('db connected');
-    // perform actions on the collection object
-    client.close();
-});
 
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.3gzbo.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+async function run() {
+    try {
+        await client.connect();
+        const productCollection = client.db('FreshFruit').collection('Fruits')
+        app.get('/product', async (req, res) => {
+            const query = {};
+            const cursor = productCollection.find(query);
+            const products = await cursor.toArray();
+            res.send(products);
+        });
+        app.get('/product', async (req, res) => {
+            const query = {};
+            const cursor = productCollection.find(query);
+            const newArrivels = await cursor.toArray();
+            res.send(newArrivels);
+        });
+        app.get('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const product = await productCollection.findOne(query);
+            res.send(products);
+        })
+
+    }
+    finally {
+
+    }
+}
+
+run().catch(console.dir);
 
 app.get('/', (req, res) => {
     res.send('Node ,I am listening you.')
